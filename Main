@@ -1,0 +1,38 @@
+/*
+    Main file for the RC Car (Arduino)
+*/
+
+void setup() {
+    Serial.begin(9600);
+    pinMode(7,OUTPUT);
+}
+
+int Truth;
+
+void loop() {
+
+  String On = "On";
+  String Off = "Off";
+  String readString;
+  
+  while (Serial.available()) {
+    delay(2);  //delay to allow byte to arrive in input buffer
+    char c = Serial.read();
+    readString += c;
+    //Serial.print(readString);
+  }
+  
+  Serial.print(readString);
+  if(readString.length()) {
+    Truth = readString.toInt();
+  }
+  
+  if(Truth) {
+    digitalWrite(7,HIGH);
+    Serial.print("Should be On");
+  }
+  else if (!Truth) {
+    digitalWrite(7,LOW);
+  }
+  delay(1000);
+}
