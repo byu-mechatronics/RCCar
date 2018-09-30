@@ -1,38 +1,70 @@
-/*
-    Main file for the RC Car (Arduino)
-*/
+// MAIN FILE FOR RC CAR
+
+#define enA 9   // Connects the right wheel to the PWM signal
+#define enB 3   // Connects the left wheel to the PWM signal
+#define inA 6   // inA & inB are inputs for the right wheel
+#define inB 7
+#define inC 5   // inC & inD are inputs for left wheel
+#define inD 4   
+
 
 void setup() {
-    Serial.begin(9600);
-    pinMode(7,OUTPUT);
+    // Sets up pins as output pins
+  pinMode(enA, OUTPUT);
+  pinMode(enB, OUTPUT);
+  pinMode(inA, OUTPUT);
+  pinMode(inB, OUTPUT);
+  
+    // Set initial rotation direction
+  digitalWrite(inA, LOW);
+  digitalWrite(inB, HIGH);
+  digitalWrite(inC, LOW);
+  digitalWrite(inD, HIGH);
+  
+    // HC Setup
+  Serial.begin(9600);
 }
 
-int Truth;
+
+int input;
+String readString;
+int outputPower = 5;      // Sets the initial power
+
 
 void loop() {
-
-  String On = "On";
-  String Off = "Off";
-  String readString;
   
-  while (Serial.available()) {
-    delay(2);  //delay to allow byte to arrive in input buffer
-    char c = Serial.read();
-    readString += c;
-    //Serial.print(readString);
-  }
+  int potValue =  outputPower;    //analogRead(A0); // Read potentiometer value
+  int pwmOutput = map(potValue, 0, 1023, 0 , 255); // Map the potentiometer value from 0 to 255
+  analogWrite(enA, pwmOutput); // Send PWM signal to L298N Enable pin
+  analogWrite(enB, pwmOutput);
   
-  Serial.print(readString);
-  if(readString.length()) {
-    Truth = readString.toInt();
+  
+  while (Serial.available()) {    // While there is something to read in...
+    delay(2);                          // delay to allow byte to arrive in input buffer
+    char c = Serial.read();            // pulls ina character 
+    readString += c;                   // and adds it to the string
   }
   
-  if(Truth) {
-    digitalWrite(7,HIGH);
-    Serial.print("Should be On");
+  if(readString.length()) {       // Checks to make sure readString isn't empty
+    input = readString.toInt();   
   }
-  else if (!Truth) {
-    digitalWrite(7,LOW);
+  
+  if(input == 1) {               // 1 - Spins the wheels in one direction
+    digitalWrite(inA, HIGH);
+    digitalWrite(inB, LOW);
+    digitalWrite(inC, HIGH);
+    digitalWrite(inD, LOW);
+  }else if (input == 0) {        // 0 - Spins the wheels in another direction
+    digitalWrite(inA, LOW);
+    digitalWrite(inB, HIGH);
+    digitalWrite(inC, LOW); 
+    digitalWrite(inD, HIGH);
+  }else if (input == 2) {        // 2 - Stops the wheels
+    outputPower = 0;
+  }else if (input == 3 && outputPower <= 900) {   // 3 - Increases the power, until it is at max
+    outputPower += 100;
   }
-  delay(1000);
+  delay(500);
 }
+
+
